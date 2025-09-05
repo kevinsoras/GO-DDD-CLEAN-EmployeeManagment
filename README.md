@@ -36,15 +36,3 @@ Este proyecto es un ejemplo de arquitectura avanzada en Go para la gestión de e
 - **I (Interface Segregation)**: Las interfaces son específicas y no fuerzan métodos innecesarios.
 - **D (Dependency Inversion)**: Los casos de uso y controladores dependen de abstracciones (interfaces), no de detalles.
 
-## Observaciones y sugerencias
-
-- **Bien aplicado**: La estructura respeta DDD y Clean Architecture. Los casos de uso no dependen de infraestructura. Los value objects y entidades están bien separados.
-- **SOLID**: Se cumple en la mayoría de los casos, especialmente con el uso de interfaces y factories.
-- **Mejoras posibles**:
-  - Persistencia de la persona: Actualmente el factory crea la entidad, pero no la persiste en la base de datos. Deberías agregar un repositorio para personas y persistirla antes de crear el empleado.
-  - Validaciones: Ya usas validaciones avanzadas, pero podrías centralizar aún más la lógica de validación de negocio en servicios de dominio.
-  - Tests: Agrega pruebas unitarias para casos de uso y servicios de dominio.
-
----
-
-> Si necesitas ejemplos de cómo mejorar la persistencia o agregar tests, ¡avísame!
