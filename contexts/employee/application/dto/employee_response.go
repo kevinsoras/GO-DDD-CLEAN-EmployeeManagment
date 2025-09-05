@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/kevinsoras/employee-management/contexts/employee/domain/entities"
+	sharedDto "github.com/kevinsoras/employee-management/shared/application/dto"
 	"github.com/kevinsoras/employee-management/shared/domain/aggregates"
 )
 
@@ -27,8 +28,8 @@ type EmployeeOutput struct {
 }
 
 type EmployeeResponse struct {
-	Employment EmployeeOutput `json:"employment"`
-	Person     PersonResponse `json:"person"`
+	Employment EmployeeOutput           `json:"employment"`
+	Person     sharedDto.PersonResponse `json:"person"`
 }
 
 type BenefitsResponse struct {
@@ -61,6 +62,6 @@ func NewEmployeeResponse(e *entities.Employee, personAgg *aggregates.PersonAggre
 				VacationDays:  e.Benefits.VacationDays,
 			},
 		},
-		Person: NewPersonResponse(personAgg),
+		Person: sharedDto.NewPersonResponse(personAgg),
 	}
 }

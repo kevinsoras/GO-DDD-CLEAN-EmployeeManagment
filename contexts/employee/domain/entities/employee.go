@@ -1,6 +1,7 @@
 package entities
 
 import (
+	"errors"
 	"log"
 	"time"
 
@@ -69,4 +70,72 @@ func NewEmployee(personID string, salary float64, contractType, position, workSc
 // AssignBenefits asigna los beneficios calculados al empleado
 func (e *Employee) AssignBenefits(benefits Benefits) {
 	e.Benefits = benefits
+}
+
+// Validate valida los campos requeridos y reglas de negocio para Employee
+func (e *Employee) Validate() error {
+	if e.PersonID == "" {
+		return errors.New("personID es obligatorio")
+	}
+	if e.Salary <= 0 {
+		return errors.New("el salario debe ser mayor a 0")
+	}
+	if e.ContractType == "" {
+		return errors.New("contractType es obligatorio")
+	}
+	if len(e.ContractType) > 30 {
+		return errors.New("contractType demasiado largo")
+	}
+	if e.Position == "" {
+		return errors.New("position es obligatorio")
+	}
+	if len(e.Position) > 50 {
+		return errors.New("position demasiado largo")
+	}
+	if e.Department == "" {
+		return errors.New("department es obligatorio")
+	}
+	if len(e.Department) > 50 {
+		return errors.New("department demasiado largo")
+	}
+	if e.WorkSchedule == "" {
+		return errors.New("workSchedule es obligatorio")
+	}
+	if len(e.WorkSchedule) > 30 {
+		return errors.New("workSchedule demasiado largo")
+	}
+	if e.WorkLocation == "" {
+		return errors.New("workLocation es obligatorio")
+	}
+	if len(e.WorkLocation) > 100 {
+		return errors.New("workLocation demasiado largo")
+	}
+	if e.BankAccount == "" {
+		return errors.New("bankAccount es obligatorio")
+	}
+	if len(e.BankAccount) > 30 {
+		return errors.New("bankAccount demasiado largo")
+	}
+	if e.AFP == "" {
+		return errors.New("AFP es obligatorio")
+	}
+	if len(e.AFP) > 30 {
+		return errors.New("AFP demasiado largo")
+	}
+	if e.EPS == "" {
+		return errors.New("EPS es obligatorio")
+	}
+	if len(e.EPS) > 50 {
+		return errors.New("EPS demasiado largo")
+	}
+	if e.StartDate.IsZero() {
+		return errors.New("startDate es obligatorio")
+	}
+	if e.StartDate.After(time.Now().AddDate(0, 1, 0)) {
+		return errors.New("startDate no puede ser en el futuro lejano")
+	}
+	if e.StartDate.Before(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)) {
+		return errors.New("startDate no puede ser antes del año 2000")
+	}
+	return nil
 }

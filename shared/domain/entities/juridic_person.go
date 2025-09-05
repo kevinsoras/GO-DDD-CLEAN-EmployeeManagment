@@ -55,20 +55,48 @@ func (n *JuridicalPerson) Validate() error {
 	if n.BusinessName == "" {
 		return errors.New("business name is required")
 	}
+	if len(n.BusinessName) > 100 {
+		return errors.New("business name too long")
+	}
 	if n.DocumentNumber == "" {
 		return errors.New("document number is required")
+	}
+	// Validación de RUC peruano: 11 dígitos numéricos
+	if len(n.DocumentNumber) != 11 {
+		return errors.New("el RUC debe tener 11 dígitos")
+	}
+	for _, c := range n.DocumentNumber {
+		if c < '0' || c > '9' {
+			return errors.New("el RUC solo puede contener números")
+		}
 	}
 	if n.RepresentativeName == "" {
 		return errors.New("representative name is required")
 	}
+	if len(n.RepresentativeName) > 100 {
+		return errors.New("representative name too long")
+	}
 	if n.RepresentativeDocument == "" {
 		return errors.New("representative document is required")
+	}
+	if len(n.RepresentativeDocument) > 20 {
+		return errors.New("representative document too long")
 	}
 	if n.TradeName == "" {
 		return errors.New("trade name is required")
 	}
+	if len(n.TradeName) > 100 {
+		return errors.New("trade name too long")
+	}
 	if n.ConstitutionDate.IsZero() {
 		return errors.New("constitution date is required")
+	}
+	// Fecha de constitución no puede ser futura ni antes de 1900
+	if n.ConstitutionDate.After(time.Now()) {
+		return errors.New("constitution date cannot be in the future")
+	}
+	if n.ConstitutionDate.Before(time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC)) {
+		return errors.New("constitution date cannot be before 1900")
 	}
 	return nil
 }
