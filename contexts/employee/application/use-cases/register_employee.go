@@ -8,10 +8,10 @@ import (
 	"github.com/kevinsoras/employee-management/contexts/employee/domain/entities"
 	"github.com/kevinsoras/employee-management/contexts/employee/domain/repositories"
 	"github.com/kevinsoras/employee-management/contexts/employee/domain/services"
+	"github.com/kevinsoras/employee-management/shared/application/mappers"
 	"github.com/kevinsoras/employee-management/shared/domain/aggregates"
 	"github.com/kevinsoras/employee-management/shared/domain/factories"
 	sharedRepository "github.com/kevinsoras/employee-management/shared/domain/repositories"
-	"github.com/kevinsoras/employee-management/shared/domain/value_objects"
 )
 
 // RegisterEmployeeUseCase orquesta el registro de un empleado
@@ -33,26 +33,7 @@ func NewRegisterEmployeeUseCase(employeeRepo repositories.EmployeeRepository, pe
 func (uc *RegisterEmployeeUseCase) Execute(ctx context.Context, req employeedto.EmployeeRegistrationRequest) (employeedto.EmployeeResponse, *aggregates.PersonAggregate, error) {
 	// 1. Crear/agregar persona usando el factory
 	personReq := req.PersonData
-	personParams := factories.PersonFactoryParams{
-		Type:           value_objects.PersonType(personReq.Type),
-		Email:          value_objects.Email(personReq.Email),
-		Phone:          value_objects.Phone(personReq.Phone),
-		Address:        personReq.Address,
-		Country:        personReq.Country,
-		DocumentNumber: personReq.DocumentNumber,
-		// NATURAL
-		FirstName:        &personReq.FirstName,
-		LastNamePaternal: &personReq.LastNamePaternal,
-		LastNameMaternal: &personReq.LastNameMaternal,
-		BirthDate:        &personReq.BirthDate,
-		Gender:           &personReq.Gender,
-		// JURIDICAL
-		BusinessName:           &personReq.BusinessName,
-		TradeName:              &personReq.TradeName,
-		ConstitutionDate:       &personReq.ConstitutionDate,
-		RepresentativeName:     &personReq.RepresentativeName,
-		RepresentativeDocument: &personReq.RepresentativeDocument,
-	}
+	personParams := mappers.ToPersonFactoryParams(personReq)
 	personAgg, err := factories.CreatePerson(personParams)
 	if err != nil {
 		return employeedto.EmployeeResponse{}, nil, fmt.Errorf("error creando persona: %w", err)
