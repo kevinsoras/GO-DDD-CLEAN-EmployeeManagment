@@ -22,10 +22,10 @@ import (
 type RegisterEmployeeUseCase struct {
 	employeeRepo repositories.EmployeeRepository
 	personRepo   sharedRepository.PersonRepository
-	laborService *services.PeruvianLaborService
+	laborService services.LaborService
 }
 
-func NewRegisterEmployeeUseCase(employeeRepo repositories.EmployeeRepository, personRepo sharedRepository.PersonRepository, laborService *services.PeruvianLaborService) *RegisterEmployeeUseCase {
+func NewRegisterEmployeeUseCase(employeeRepo repositories.EmployeeRepository, personRepo sharedRepository.PersonRepository, laborService services.LaborService) *RegisterEmployeeUseCase {
 	return &RegisterEmployeeUseCase{
 		employeeRepo: employeeRepo,
 		personRepo:   personRepo,

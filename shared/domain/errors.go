@@ -86,4 +86,5 @@ func NewInternalServerError(msg string, err error) error {
 var (
 	ErrEmployeeNotFound = NewNotFoundError("employee not found", nil)
 	ErrPersonNotFound   = NewNotFoundError("person not found", nil)
+	ErrAlreadyExists    = NewAlreadyExistsError("resource already exists", nil)
 )
