@@ -10,6 +10,7 @@ import (
 	"github.com/kevinsoras/employee-management/shared/domain/datasource"
 	"github.com/kevinsoras/employee-management/shared/domain/value_objects"
 	"github.com/kevinsoras/employee-management/shared/infrastructure/datasource/postgres/inserters"
+	sharedInfra "github.com/kevinsoras/employee-management/shared/infrastructure"
 )
 
 type PersonDataSourcePostgres struct {
@@ -43,6 +44,11 @@ func (ds *PersonDataSourcePostgres) SavePerson(ctx context.Context, agg *aggrega
 	// Use the common person inserter first
 	commonInserter := inserters.NewPersonInserter()
 	if err = commonInserter.Insert(ctx, tx, agg); err != nil {
+		// In a real scenario, you'd check for specific DB driver error codes here
+		// For demonstration, let's assume sql.ErrNoRows indicates a unique constraint violation
+		if errors.Is(err, sql.ErrNoRows) { // This is a placeholder for actual unique constraint error check
+			return sharedInfra.NewDBError("failed to insert common person data: unique constraint violation", sharedInfra.ErrUniqueConstraint)
+		}
 		return fmt.Errorf("commonInserter.Insert: %w", err)
 	}
 
@@ -52,6 +58,11 @@ func (ds *PersonDataSourcePostgres) SavePerson(ctx context.Context, agg *aggrega
 		return errors.New("no specific inserter found for person type")
 	}
 	if err = specificInserter.Insert(ctx, tx, agg); err != nil {
+		// In a real scenario, you'd check for specific DB driver error codes here
+		// For demonstration, let's assume sql.ErrNoRows indicates a unique constraint violation
+		if errors.Is(err, sql.ErrNoRows) { // This is a placeholder for actual unique constraint error check
+			return sharedInfra.NewDBError("failed to insert specific person data: unique constraint violation", sharedInfra.ErrUniqueConstraint)
+		}
 		return fmt.Errorf("specificInserter.Insert: %w", err)
 	}
 
