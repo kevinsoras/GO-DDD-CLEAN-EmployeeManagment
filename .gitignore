@@ -1,0 +1,23 @@
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go toolchain
+*.out
+
+# Dependency directories (golang can create these in subdirectories)
+vendor/
+
+# Log files
+*.log
+
+# Environment variables
+.env
+
+# Swagger documentation
+docs/

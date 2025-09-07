@@ -6,12 +6,19 @@ import (
 	"net/http"
 	"os"
 
+	_ "github.com/kevinsoras/employee-management/docs" // Importa los docs generados por Swag
 	"github.com/joho/godotenv"
 	"github.com/kevinsoras/employee-management/contexts/employee/interfaces"
 	"github.com/kevinsoras/employee-management/shared/infrastructure/db"
 	"github.com/kevinsoras/employee-management/shared/infrastructure/logger"
+	httpSwagger "github.com/swaggo/http-swagger" // Importa el manejador de Swagger UI
 )
 
+// @title Employee Management API
+// @version 1.0
+// @description This is the API for managing employees.
+// @host localhost:3000
+// @BasePath /
 func main() {
 	// Cargar variables de entorno desde .env
 	if err := godotenv.Load(); err != nil {
@@ -34,6 +41,9 @@ func main() {
 
 	// Inicializar API
 	http.HandleFunc("/employee", employeeController.HandleRegister)
+
+	// Ruta para la documentación de Swagger
+	http.Handle("/swagger/", httpSwagger.Handler(httpSwagger.URL("http://localhost:3000/swagger/doc.json")))
 
 	// Iniciar servidor
 	appLogger.Info("Server started", "port", 3000)

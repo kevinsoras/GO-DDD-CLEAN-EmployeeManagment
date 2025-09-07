@@ -31,7 +31,8 @@ migrate-up:
 		else \
 			echo "⚠️  Saltando $$dir (no existe)"; \
 		fi \
-	done
+		;\
+		done
 
 
 
@@ -42,10 +43,11 @@ migrate-down:
 	for dir in $(MIGRATIONS_DIRS); do \
 		if [ -d "$$dir" ]; then \
 			for file in $$dir/*.up.sql; do \
-				all_files+=("$$file"); \
-			done; \
+				all_files+=(\"$$file\"); \
+				;\
+				done; \
 		fi; \
-	done; \
+		done; \
 	if [ $${#all_files[@]} -eq 0 ]; then \
 		echo "⚠️  No se encontraron migraciones para revertir"; \
 		exit 0; \
@@ -55,3 +57,7 @@ migrate-down:
 	echo "⏪ Revirtiendo última migración: $$latest_file en $$latest_dir..."; \
 	migrate -path "$$latest_dir" -database "$(DB_URL)" down 1; \
 	'
+
+swagger-docs:
+	@echo "Generating Swagger documentation..."
+	@swag init -dir ./cmd -g main.go

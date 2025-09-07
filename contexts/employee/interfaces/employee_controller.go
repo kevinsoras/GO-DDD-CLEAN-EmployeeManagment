@@ -12,6 +12,7 @@ import (
 	empPostgres "github.com/kevinsoras/employee-management/contexts/employee/infrastructure/datasource/postgres"
 	repository "github.com/kevinsoras/employee-management/contexts/employee/infrastructure/repositories"
 	"github.com/kevinsoras/employee-management/shared/application"
+	sharedDomain "github.com/kevinsoras/employee-management/shared/domain"
 	sharedPostgres "github.com/kevinsoras/employee-management/shared/infrastructure/datasource/postgres"
 	"github.com/kevinsoras/employee-management/shared/infrastructure/db"
 	sharedRepository "github.com/kevinsoras/employee-management/shared/infrastructure/repositories"
@@ -51,6 +52,17 @@ func NewEmployeeController(dbConn *sql.DB, logger *slog.Logger) *EmployeeControl
 }
 
 // HandleRegister handles the employee registration HTTP request.
+// @Summary Register a new employee
+// @Description Register a new employee with personal and employment details.
+// @Tags Employees
+// @Accept json
+// @Produce json
+// @Param employee body dto.EmployeeRegistrationRequest true "Employee registration details"
+// @Success 201 {object} utils.APIResponse "Employee registered successfully"
+// @Failure 400 {object} utils.APIResponse "Bad request"
+// @Failure 409 {object} utils.APIResponse "Conflict - Employee already exists"
+// @Failure 500 {object} utils.APIResponse "Internal server error"
+// @Router /employee [post]
 func (c *EmployeeController) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	c.logger.Info("Received request to register employee")
 	if r.Method != http.MethodPost {
@@ -63,8 +75,7 @@ func (c *EmployeeController) HandleRegister(w http.ResponseWriter, r *http.Reque
 	var registrationDTO dto.EmployeeRegistrationRequest
 	if err := utils.ValidateAndBind(r, &registrationDTO); err != nil {
 		c.logger.Error("Failed to validate or bind request DTO", "error", err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
+		utils.HandleHTTPError(w, c.logger, sharedDomain.NewInvalidInputError(err.Error(), err)) // Use NewInvalidInputError
 		return
 	}
 
@@ -83,3 +94,4 @@ func (c *EmployeeController) HandleRegister(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(utils.SuccessResponse("Empleado registrado exitosamente", resp))
 }
+
