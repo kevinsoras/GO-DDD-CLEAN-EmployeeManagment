@@ -6,6 +6,7 @@ import (
 
 	"github.com/kevinsoras/employee-management/contexts/employee/domain/datasource"
 	"github.com/kevinsoras/employee-management/contexts/employee/domain/entities"
+	"github.com/kevinsoras/employee-management/shared/infrastructure/db"
 )
 
 // EmployeeDataSourcePostgres implementa EmployeeDataSource usando PostgreSQL
@@ -19,12 +20,13 @@ func NewEmployeeDataSourcePostgres(db *sql.DB) datasource.EmployeeDataSource {
 }
 
 func (ds *EmployeeDataSourcePostgres) SaveEmployee(ctx context.Context, employee *entities.Employee) error {
+	querier := db.GetQuerier(ctx, ds.db)
 	query := `INSERT INTO employees (
 		employee_id, person_id, salary, contract_type, position, work_schedule, department, work_location, bank_account, afp, eps, start_date, has_cts, has_gratification, has_vacation, cts, gratification, vacation_days, created_at, updated_at
 	) VALUES (
 		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, now(), now()
 	)`
-	_, err := ds.db.ExecContext(ctx, query,
+	_, err := querier.ExecContext(ctx, query,
 		employee.ID(),
 		employee.PersonID(),
 		employee.Salary(),

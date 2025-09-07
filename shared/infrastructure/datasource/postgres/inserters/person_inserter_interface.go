@@ -2,10 +2,10 @@ package inserters
 
 import (
 	"context"
-	"database/sql"
 	"github.com/kevinsoras/employee-management/shared/domain/aggregates"
+	"github.com/kevinsoras/employee-management/shared/infrastructure/db"
 )
 
 type PersonInserter interface {
-	Insert(ctx context.Context, tx *sql.Tx, person *aggregates.PersonAggregate) error
+	Insert(ctx context.Context, querier db.Querier, person *aggregates.PersonAggregate) error
 }

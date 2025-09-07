@@ -79,34 +79,36 @@ func TestRegisterEmployeeUseCase_Execute_Success(t *testing.T) {
 
 	useCase := usecases.NewRegisterEmployeeUseCase(mockEmployeeRepo, mockPersonRepo, mockLaborService)
 
-	req := employeedto.EmployeeRegistrationRequest{
-		PersonData: shared_dto.PersonRequest{
-			Type:            "NATURAL",
-			FirstName:       "John",
-			LastNamePaternal: "Doe",
-			LastNameMaternal: "Smith",
-			Email:           "john.doe@example.com",
-			Phone:           "123456789",
-			Address:         "123 Main St",
-			Country:         "Peru",
-			DocumentNumber:  "12345678",
-			BirthDate:       time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC),
-			Gender:          "M",
-		},
-		EmploymentData: employeedto.EmploymentData{
-			Salary:       5000.0,
-			ContractType: "indefinido",
-			StartDate:    time.Now(),
-			Position:     "Software Engineer",
-			Department:   "IT",
-			WorkSchedule: "full-time",
-			WorkLocation: "office",
-			BankAccount:  "1234567890",
-			AFP:          "Integra",
-			EPS:          "Rimac",
-			HasCTS:         true,
-			HasGratification: true,
-			HasVacation:    true,
+	cmd := usecases.RegisterEmployeeCommand{
+		Data: employeedto.EmployeeRegistrationRequest{
+			PersonData: shared_dto.PersonRequest{
+				Type:            "NATURAL",
+				FirstName:       "John",
+				LastNamePaternal: "Doe",
+				LastNameMaternal: "Smith",
+				Email:           "john.doe@example.com",
+				Phone:           "123456789",
+				Address:         "123 Main St",
+				Country:         "Peru",
+				DocumentNumber:  "12345678",
+				BirthDate:       time.Date(1990, 1, 1, 0, 0, 0, 0, time.UTC),
+				Gender:          "M",
+			},
+			EmploymentData: employeedto.EmploymentData{
+				Salary:       5000.0,
+				ContractType: "indefinido",
+				StartDate:    time.Now(),
+				Position:     "Software Engineer",
+				Department:   "IT",
+				WorkSchedule: "full-time",
+				WorkLocation: "office",
+				BankAccount:  "1234567890",
+				AFP:          "Integra",
+				EPS:          "Rimac",
+				HasCTS:         true,
+				HasGratification: true,
+				HasVacation:    true,
+			},
 		},
 	}
 
@@ -120,14 +122,13 @@ func TestRegisterEmployeeUseCase_Execute_Success(t *testing.T) {
 	mockEmployeeRepo.On("SaveEmployee", mock.Anything, mock.Anything).Return(nil)
 
 	// When
-	employeeResp, personAgg, err := useCase.Execute(ctx, req)
+	employeeResp, err := useCase.Execute(ctx, cmd)
 
 	// Then
 	assert.NoError(t, err)
 	assert.NotNil(t, employeeResp)
-	assert.NotNil(t, personAgg)
-	assert.Equal(t, req.PersonData.FirstName, employeeResp.Person.FirstName)
-	assert.Equal(t, req.EmploymentData.Salary, employeeResp.Employment.Salary)
+	assert.Equal(t, cmd.Data.PersonData.FirstName, employeeResp.Person.FirstName)
+	assert.Equal(t, cmd.Data.EmploymentData.Salary, employeeResp.Employment.Salary)
 
 	mockEmployeeRepo.AssertExpectations(t)
 	mockPersonRepo.AssertExpectations(t)
@@ -175,14 +176,15 @@ func TestRegisterEmployeeUseCase_Execute_PersonCreationError(t *testing.T) {
 
 	ctx := context.Background()
 
+	cmd := usecases.RegisterEmployeeCommand{Data: req}
+
 	// When
-	employeeResp, personAgg, err := useCase.Execute(ctx, req)
+	employeeResp, err := useCase.Execute(ctx, cmd)
 
 	// Then
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "error creating person")
 	assert.Equal(t, employeedto.EmployeeResponse{}, employeeResp)
-	assert.Nil(t, personAgg)
 
 	mockEmployeeRepo.AssertNotCalled(t, "SaveEmployee", mock.Anything, mock.Anything)
 	mockPersonRepo.AssertNotCalled(t, "SavePerson", mock.Anything, mock.Anything)
@@ -241,14 +243,15 @@ func TestRegisterEmployeeUseCase_Execute_EmployeeCreationError(t *testing.T) {
 	mockEmployeeRepo.On("SaveEmployee", mock.Anything, mock.Anything).Return(nil).Maybe()
 
 
+	cmd := usecases.RegisterEmployeeCommand{Data: req}
+
 	// When
-	employeeResp, personAgg, err := useCase.Execute(ctx, req)
+	employeeResp, err := useCase.Execute(ctx, cmd)
 
 	// Then
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "error creating employee")
 	assert.Equal(t, employeedto.EmployeeResponse{}, employeeResp)
-	assert.Nil(t, personAgg)
 
 	mockEmployeeRepo.AssertNotCalled(t, "SaveEmployee", mock.Anything, mock.Anything)
 	mockPersonRepo.AssertNotCalled(t, "SavePerson", mock.Anything, mock.Anything)
@@ -305,14 +308,15 @@ func TestRegisterEmployeeUseCase_Execute_LaborServiceValidationError(t *testing.
 	mockPersonRepo.On("SavePerson", mock.Anything, mock.Anything).Return(nil).Maybe() // Should not be called
 	mockEmployeeRepo.On("SaveEmployee", mock.Anything, mock.Anything).Return(nil).Maybe() // Should not be called
 
+	cmd := usecases.RegisterEmployeeCommand{Data: req}
+
 	// When
-	employeeResp, personAgg, err := useCase.Execute(ctx, req)
+	employeeResp, err := useCase.Execute(ctx, cmd)
 
 	// Then
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "legal validation error")
 	assert.Equal(t, employeedto.EmployeeResponse{}, employeeResp)
-	assert.Nil(t, personAgg)
 
 	mockLaborService.AssertCalled(t, "ValidateEmployeeRegistration", mock.Anything, mock.Anything)
 	mockLaborService.AssertNotCalled(t, "CalculateBenefits", mock.Anything)
@@ -369,14 +373,15 @@ func TestRegisterEmployeeUseCase_Execute_CalculateBenefitsError(t *testing.T) {
 	mockPersonRepo.On("SavePerson", mock.Anything, mock.Anything).Return(nil).Maybe() // Should not be called
 	mockEmployeeRepo.On("SaveEmployee", mock.Anything, mock.Anything).Return(nil).Maybe() // Should not be called
 
+	cmd := usecases.RegisterEmployeeCommand{Data: req}
+
 	// When
-	employeeResp, personAgg, err := useCase.Execute(ctx, req)
+	employeeResp, err := useCase.Execute(ctx, cmd)
 
 	// Then
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "error calculating benefits")
 	assert.Equal(t, employeedto.EmployeeResponse{}, employeeResp)
-	assert.Nil(t, personAgg)
 
 	mockLaborService.AssertCalled(t, "ValidateEmployeeRegistration", mock.Anything, mock.Anything)
 	mockLaborService.AssertCalled(t, "CalculateBenefits", mock.Anything)
@@ -433,14 +438,15 @@ func TestRegisterEmployeeUseCase_Execute_SavePersonError(t *testing.T) {
 	mockPersonRepo.On("SavePerson", mock.Anything, mock.Anything).Return(savePersonErr)
 	mockEmployeeRepo.On("SaveEmployee", mock.Anything, mock.Anything).Return(nil).Maybe() // Should not be called
 
+	cmd := usecases.RegisterEmployeeCommand{Data: req}
+
 	// When
-	employeeResp, personAgg, err := useCase.Execute(ctx, req)
+	employeeResp, err := useCase.Execute(ctx, cmd)
 
 	// Then
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "error saving person")
 	assert.Equal(t, employeedto.EmployeeResponse{}, employeeResp)
-	assert.Nil(t, personAgg)
 
 	mockLaborService.AssertCalled(t, "ValidateEmployeeRegistration", mock.Anything, mock.Anything)
 	mockLaborService.AssertCalled(t, "CalculateBenefits", mock.Anything)
@@ -495,8 +501,10 @@ func TestRegisterEmployeeUseCase_Execute_SavePersonUniqueConstraintError(t *test
 	mockLaborService.On("CalculateBenefits", mock.Anything).Return(benefits, nil)
 	mockPersonRepo.On("SavePerson", mock.Anything, mock.Anything).Return(sharedInfra.ErrUniqueConstraint)
 
+	cmd := usecases.RegisterEmployeeCommand{Data: req}
+
 	// When
-	employeeResp, personAgg, err := useCase.Execute(ctx, req)
+	employeeResp, err := useCase.Execute(ctx, cmd)
 
 	// Then
 	assert.Error(t, err)
@@ -505,7 +513,6 @@ func TestRegisterEmployeeUseCase_Execute_SavePersonUniqueConstraintError(t *test
 	assert.True(t, errors.As(err, &domainErr))
 	assert.Equal(t, "ALREADY_EXISTS", domainErr.Code)
 	assert.Equal(t, employeedto.EmployeeResponse{}, employeeResp)
-	assert.Nil(t, personAgg)
 
 	mockLaborService.AssertCalled(t, "ValidateEmployeeRegistration", mock.Anything, mock.Anything)
 	mockLaborService.AssertCalled(t, "CalculateBenefits", mock.Anything)
@@ -561,14 +568,15 @@ func TestRegisterEmployeeUseCase_Execute_SaveEmployeeError(t *testing.T) {
 	mockPersonRepo.On("SavePerson", mock.Anything, mock.Anything).Return(nil)
 	mockEmployeeRepo.On("SaveEmployee", mock.Anything, mock.Anything).Return(saveEmployeeErr)
 
+	cmd := usecases.RegisterEmployeeCommand{Data: req}
+
 	// When
-	employeeResp, personAgg, err := useCase.Execute(ctx, req)
+	employeeResp, err := useCase.Execute(ctx, cmd)
 
 	// Then
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "error saving employee")
 	assert.Equal(t, employeedto.EmployeeResponse{}, employeeResp)
-	assert.Nil(t, personAgg)
 
 	mockLaborService.AssertCalled(t, "ValidateEmployeeRegistration", mock.Anything, mock.Anything)
 	mockLaborService.AssertCalled(t, "CalculateBenefits", mock.Anything)

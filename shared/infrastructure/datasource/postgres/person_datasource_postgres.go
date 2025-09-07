@@ -11,6 +11,7 @@ import (
 	"github.com/kevinsoras/employee-management/shared/domain/value_objects"
 	"github.com/kevinsoras/employee-management/shared/infrastructure/datasource/postgres/inserters"
 	sharedInfra "github.com/kevinsoras/employee-management/shared/infrastructure"
+	"github.com/kevinsoras/employee-management/shared/infrastructure/db"
 )
 
 type PersonDataSourcePostgres struct {
@@ -29,24 +30,12 @@ func NewPersonDataSourcePostgres(db *sql.DB) datasource.PersonDataSource {
 }
 
 func (ds *PersonDataSourcePostgres) SavePerson(ctx context.Context, agg *aggregates.PersonAggregate) (err error) {
-	tx, err := ds.db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		} else {
-			err = tx.Commit()
-		}
-	}()
+	querier := db.GetQuerier(ctx, ds.db)
 
 	// Use the common person inserter first
 	commonInserter := inserters.NewPersonInserter()
-	if err = commonInserter.Insert(ctx, tx, agg); err != nil {
-		// In a real scenario, you'd check for specific DB driver error codes here
-		// For demonstration, let's assume sql.ErrNoRows indicates a unique constraint violation
-		if errors.Is(err, sql.ErrNoRows) { // This is a placeholder for actual unique constraint error check
+	if err = commonInserter.Insert(ctx, querier, agg); err != nil {
+		if errors.Is(err, sql.ErrNoRows) { // Placeholder
 			return sharedInfra.NewDBError("failed to insert common person data: unique constraint violation", sharedInfra.ErrUniqueConstraint)
 		}
 		return fmt.Errorf("commonInserter.Insert: %w", err)
@@ -57,10 +46,8 @@ func (ds *PersonDataSourcePostgres) SavePerson(ctx context.Context, agg *aggrega
 	if !ok {
 		return errors.New("no specific inserter found for person type")
 	}
-	if err = specificInserter.Insert(ctx, tx, agg); err != nil {
-		// In a real scenario, you'd check for specific DB driver error codes here
-		// For demonstration, let's assume sql.ErrNoRows indicates a unique constraint violation
-		if errors.Is(err, sql.ErrNoRows) { // This is a placeholder for actual unique constraint error check
+	if err = specificInserter.Insert(ctx, querier, agg); err != nil {
+		if errors.Is(err, sql.ErrNoRows) { // Placeholder
 			return sharedInfra.NewDBError("failed to insert specific person data: unique constraint violation", sharedInfra.ErrUniqueConstraint)
 		}
 		return fmt.Errorf("specificInserter.Insert: %w", err)

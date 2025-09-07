@@ -2,7 +2,7 @@ package usecases
 
 import (
 	"context"
-	"errors" // Add this import
+	"errors"
 	"fmt"
 
 	employeedto "github.com/kevinsoras/employee-management/contexts/employee/application/dto"
@@ -11,20 +11,27 @@ import (
 	"github.com/kevinsoras/employee-management/contexts/employee/domain/services"
 	"github.com/kevinsoras/employee-management/shared/application/mappers"
 	sharedDomain "github.com/kevinsoras/employee-management/shared/domain"
-	"github.com/kevinsoras/employee-management/shared/domain/aggregates"
 	"github.com/kevinsoras/employee-management/shared/domain/factories"
 	sharedRepository "github.com/kevinsoras/employee-management/shared/domain/repositories"
 	sharedInfra "github.com/kevinsoras/employee-management/shared/infrastructure"
 )
 
-// RegisterEmployeeUseCase orquesta el registro de un empleado
+// RegisterEmployeeCommand encapsulates all the information needed to register an employee.
+// This follows the Command pattern.
+type RegisterEmployeeCommand struct {
+	Data employeedto.EmployeeRegistrationRequest
+	// Future fields like ExecutingUserID, UserRole, etc. can be added here.
+}
 
+// RegisterEmployeeUseCase orchestrates the registration of an employee.
+// This is the "pure" use case, containing only business logic.
 type RegisterEmployeeUseCase struct {
 	employeeRepo repositories.EmployeeRepository
 	personRepo   sharedRepository.PersonRepository
 	laborService services.LaborService
 }
 
+// NewRegisterEmployeeUseCase creates a new RegisterEmployeeUseCase.
 func NewRegisterEmployeeUseCase(employeeRepo repositories.EmployeeRepository, personRepo sharedRepository.PersonRepository, laborService services.LaborService) *RegisterEmployeeUseCase {
 	return &RegisterEmployeeUseCase{
 		employeeRepo: employeeRepo,
@@ -33,55 +40,55 @@ func NewRegisterEmployeeUseCase(employeeRepo repositories.EmployeeRepository, pe
 	}
 }
 
-func (uc *RegisterEmployeeUseCase) Execute(ctx context.Context, req employeedto.EmployeeRegistrationRequest) (employeedto.EmployeeResponse, *aggregates.PersonAggregate, error) {
-	// 1. Crear/agregar persona usando el factory
-	personReq := req.PersonData
+// Execute contains the core business logic for registering an employee.
+func (uc *RegisterEmployeeUseCase) Execute(ctx context.Context, cmd RegisterEmployeeCommand) (employeedto.EmployeeResponse, error) {
+	// 1. Create person aggregate using the factory
+	personReq := cmd.Data.PersonData
 	personParams := mappers.ToPersonFactoryParams(personReq)
 	personAgg, err := factories.CreatePerson(personParams)
 	if err != nil {
-		return employeedto.EmployeeResponse{}, nil, fmt.Errorf("error creating person: %w", err)
+		return employeedto.EmployeeResponse{}, fmt.Errorf("error creating person: %w", err)
 	}
 	personID := personAgg.Person.ID
-	// 2. Crear entidad Employee usando el ID de persona
-	e := req.EmploymentData
+
+	// 2. Create Employee entity using the person ID
+	e := cmd.Data.EmploymentData
 	employee, err := entities.NewEmployeeBuilder(personID, e.Salary, e.ContractType, e.StartDate).
 		WithJobDetails(e.Position, e.Department, e.WorkSchedule, e.WorkLocation).
 		WithPayroll(e.BankAccount, e.AFP, e.EPS).
 		WithBenefitFlags(e.HasCTS, e.HasGratification, e.HasVacation).
 		Build()
 	if err != nil {
-		return employeedto.EmployeeResponse{}, nil, fmt.Errorf("error creating employee: %w", err)
+		return employeedto.EmployeeResponse{}, fmt.Errorf("error creating employee: %w", err)
 	}
 
-	// 2. Validaciones de dominio (servicio de dominio)
+	// 3. Perform domain validations using a domain service
 	employmentData := services.EmploymentData{
 		Salary:       e.Salary,
 		ContractType: e.ContractType,
 	}
 	if err := uc.laborService.ValidateEmployeeRegistration(employee, employmentData); err != nil {
-		return employeedto.EmployeeResponse{}, nil, fmt.Errorf("legal validation error: %w", err)
+		return employeedto.EmployeeResponse{}, fmt.Errorf("legal validation error: %w", err)
 	}
 
-	// 3. Calcular beneficios
+	// 4. Calculate benefits
 	benefits, err := uc.laborService.CalculateBenefits(employee)
 	if err != nil {
-		return employeedto.EmployeeResponse{}, nil, fmt.Errorf("error calculating benefits: %w", err)
+		return employeedto.EmployeeResponse{}, fmt.Errorf("error calculating benefits: %w", err)
 	}
 	employee.AssignBenefits(benefits)
 
-	// Persistir persona y empleado
+	// 5. Persist person and employee
 	if err := uc.personRepo.SavePerson(ctx, personAgg); err != nil {
-		// Check for infrastructure unique constraint error and map to domain error
 		if errors.Is(err, sharedInfra.ErrUniqueConstraint) {
-			return employeedto.EmployeeResponse{}, nil, sharedDomain.NewAlreadyExistsError("person with this ID/document already exists", err)
+			return employeedto.EmployeeResponse{}, sharedDomain.NewAlreadyExistsError("person with this ID/document already exists", err)
 		}
-		// For any other unhandled error, return a generic error
-		return employeedto.EmployeeResponse{}, nil, fmt.Errorf("error saving person : %w", err)
+		return employeedto.EmployeeResponse{}, fmt.Errorf("error saving person: %w", err)
 	}
 	if err := uc.employeeRepo.SaveEmployee(ctx, employee); err != nil {
-		return employeedto.EmployeeResponse{}, nil, fmt.Errorf("error saving employee: %w", err)
+		return employeedto.EmployeeResponse{}, fmt.Errorf("error saving employee: %w", err)
 	}
 
-	// Mapear a output DTO
-	return employeedto.NewEmployeeResponse(employee, personAgg), personAgg, nil
+	// 6. Map to output DTO
+	return employeedto.NewEmployeeResponse(employee, personAgg), nil
 }
