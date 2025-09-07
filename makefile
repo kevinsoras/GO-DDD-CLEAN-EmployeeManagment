@@ -51,6 +51,7 @@ migrate-down:
 				all_files+=(\"$$file\"); \
 				;\
 				done; \
+			fi; \
 		fi; \
 		done; \
 	if [ $${#all_files[@]} -eq 0 ]; then \
@@ -66,3 +67,15 @@ migrate-down:
 swagger-docs:
 	@echo "Generating Swagger documentation..."
 	@swag init -dir ./cmd -g main.go
+
+format:
+	@echo "Running gofmt and goimports..."
+	@gofmt -s -w .
+	@goimports -w .
+
+lint:
+	@echo "Running golangci-lint..."
+	@golangci-lint run --timeout=5m
+
+check: format lint
+	@echo "All code quality checks passed!"

@@ -82,6 +82,31 @@ La documentación interactiva de la API se genera automáticamente usando [Swag]
     ```
     Aquí podrás ver y probar todos los endpoints documentados.
 
+### Herramientas de Calidad de Código
+
+El proyecto utiliza las siguientes herramientas para asegurar la calidad y consistencia del código:
+
+-   **`gofmt`**: Formateador estándar de Go.
+-   **`goimports`**: Gestiona automáticamente las importaciones y formatea el código.
+-   **`golangci-lint`**: Un linter rápido y potente que combina múltiples linters.
+
+**Uso:**
+
+-   **Formatear el código:**
+    ```bash
+    make format
+    ```
+
+-   **Ejecutar linters:**
+    ```bash
+    make lint
+    ```
+
+-   **Ejecutar todas las comprobaciones de calidad (formato + lint):**
+    ```bash
+    make check
+    ```
+
 ## Configuración y Ejecución
 
 Para arrancar la aplicación, sigue estos pasos:

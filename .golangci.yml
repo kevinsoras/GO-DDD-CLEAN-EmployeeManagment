@@ -1,0 +1,105 @@
+run:
+  timeout: 5m
+  issues-exit-code: 1
+  tests: false
+  skip-dirs:
+    - vendor
+    - docs
+
+output:
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+  goimports:
+    local-prefixes: github.com/kevinsoras/employee-management
+  revive:
+    min-confidence: 0.8
+    rules:
+      - name: var-declaration
+        severity: warning
+      - name: package-comments
+        severity: warning
+      - name: exported
+        severity: warning
+
+linters:
+  enable:
+    - errcheck
+    - gofmt
+    - goimports
+    - revive
+    - unparam
+    - staticcheck
+    - gosimple
+    - unused
+    - ineffassign
+    - typecheck
+    - govet
+    - bodyclose
+    - contextcheck
+    - depguard
+    - durationcheck
+    - errorlint
+    - exhaustive
+    - exportloopref
+    - forcetypeassert
+    - gocheckcompilerdirectives
+    - gochecknoglobals
+    - gocognit
+    - goconst
+    - gocritic
+    - godox
+    - gosec
+    - lll
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnil
+    - noctx
+    - prealloc
+    - promlinter
+    - rowserrcheck
+    - sqlclosecheck
+    - tagliatelle
+    - tenv
+    - testpackage
+    - unconvert
+    - unparam
+    - usestdlibvars
+    - wastedassign
+    - whitespace
+    - wsl
+    - wrapcheck
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  exclude-rules:
+    - path: _test\.go$
+      linters:
+        - gosec
+        - dupl
+        - gochecknoglobals
+        - funlen
+        - gocognit
+        - nakedret
+        - prealloc
+        - testpackage
+        - noctx
+        - contextcheck
+        - bodyclose
+        - rowserrcheck
+        - sqlclosecheck
+        - tagliatelle
+        - tenv
+        - unparam
+        - usestdlibvars
+        - wastedassign
+        - whitespace
+        - wsl
+        - wrapcheck
