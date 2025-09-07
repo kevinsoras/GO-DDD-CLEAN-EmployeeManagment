@@ -74,9 +74,7 @@ func (c *EmployeeController) HandleRegister(w http.ResponseWriter, r *http.Reque
 
 	resp, err := c.registerEmployeeUseCase.Execute(r.Context(), cmd)
 	if err != nil {
-		c.logger.Error("Failed to execute RegisterEmployeeUseCase", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		_ = json.NewEncoder(w).Encode(utils.ErrorResponse(err.Error()))
+		utils.HandleHTTPError(w, c.logger, err)
 		return
 	}
 

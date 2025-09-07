@@ -6,13 +6,17 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/kevinsoras/employee-management/shared/domain"
 	"github.com/kevinsoras/employee-management/shared/domain/aggregates"
 	"github.com/kevinsoras/employee-management/shared/domain/datasource"
 	"github.com/kevinsoras/employee-management/shared/domain/value_objects"
+	"github.com/kevinsoras/employee-management/shared/infrastructure"
 	"github.com/kevinsoras/employee-management/shared/infrastructure/datasource/postgres/inserters"
-	sharedInfra "github.com/kevinsoras/employee-management/shared/infrastructure"
 	"github.com/kevinsoras/employee-management/shared/infrastructure/db"
+	"github.com/lib/pq"
 )
+
+const uniqueViolationCode = "23505"
 
 type PersonDataSourcePostgres struct {
 	db        *sql.DB
@@ -35,10 +39,7 @@ func (ds *PersonDataSourcePostgres) SavePerson(ctx context.Context, agg *aggrega
 	// Use the common person inserter first
 	commonInserter := inserters.NewPersonInserter()
 	if err = commonInserter.Insert(ctx, querier, agg); err != nil {
-		if errors.Is(err, sql.ErrNoRows) { // Placeholder
-			return sharedInfra.NewDBError("failed to insert common person data: unique constraint violation", sharedInfra.ErrUniqueConstraint)
-		}
-		return fmt.Errorf("commonInserter.Insert: %w", err)
+		return ds.handleError(err)
 	}
 
 	// Then use the specific person inserter
@@ -47,10 +48,7 @@ func (ds *PersonDataSourcePostgres) SavePerson(ctx context.Context, agg *aggrega
 		return errors.New("no specific inserter found for person type")
 	}
 	if err = specificInserter.Insert(ctx, querier, agg); err != nil {
-		if errors.Is(err, sql.ErrNoRows) { // Placeholder
-			return sharedInfra.NewDBError("failed to insert specific person data: unique constraint violation", sharedInfra.ErrUniqueConstraint)
-		}
-		return fmt.Errorf("specificInserter.Insert: %w", err)
+		return ds.handleError(err)
 	}
 
 	return nil
@@ -59,4 +57,18 @@ func (ds *PersonDataSourcePostgres) SavePerson(ctx context.Context, agg *aggrega
 func (ds *PersonDataSourcePostgres) GetPersonByID(ctx context.Context, id string) (*aggregates.PersonAggregate, error) {
 	// Aquí va la lógica SQL para obtener una persona por ID
 	return nil, nil
+}
+
+// handleError translates specific database errors into domain errors or infrastructure errors.
+func (ds *PersonDataSourcePostgres) handleError(err error) error {
+	var pqErr *pq.Error
+	if errors.As(err, &pqErr) {
+		if pqErr.Code == uniqueViolationCode {
+			return domain.NewAlreadyExistsError("La persona o el documento ya se encuentra registrado.", err)
+		}
+		// For any other pq.Error, wrap it as a generic DB error.
+		return infrastructure.NewDBError(fmt.Sprintf("Error de base de datos: %s", pqErr.Message), err)
+	}
+	// For any other non-pq error, wrap it as a generic DB error.
+		return infrastructure.NewDBError("Error inesperado de infraestructura", err)
 }

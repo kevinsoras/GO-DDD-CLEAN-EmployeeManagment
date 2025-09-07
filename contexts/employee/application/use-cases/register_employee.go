@@ -2,7 +2,6 @@ package usecases
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	employeedto "github.com/kevinsoras/employee-management/contexts/employee/application/dto"
@@ -10,10 +9,8 @@ import (
 	"github.com/kevinsoras/employee-management/contexts/employee/domain/repositories"
 	"github.com/kevinsoras/employee-management/contexts/employee/domain/services"
 	"github.com/kevinsoras/employee-management/shared/application/mappers"
-	sharedDomain "github.com/kevinsoras/employee-management/shared/domain"
 	"github.com/kevinsoras/employee-management/shared/domain/factories"
 	sharedRepository "github.com/kevinsoras/employee-management/shared/domain/repositories"
-	sharedInfra "github.com/kevinsoras/employee-management/shared/infrastructure"
 )
 
 // RegisterEmployeeCommand encapsulates all the information needed to register an employee.
@@ -80,9 +77,6 @@ func (uc *RegisterEmployeeUseCase) Execute(ctx context.Context, cmd RegisterEmpl
 
 	// 5. Persist person and employee
 	if err := uc.personRepo.SavePerson(ctx, personAgg); err != nil {
-		if errors.Is(err, sharedInfra.ErrUniqueConstraint) {
-			return employeedto.EmployeeResponse{}, sharedDomain.NewAlreadyExistsError("person with this ID/document already exists", err)
-		}
 		return employeedto.EmployeeResponse{}, fmt.Errorf("error saving person: %w", err)
 	}
 	if err := uc.employeeRepo.SaveEmployee(ctx, employee); err != nil {
