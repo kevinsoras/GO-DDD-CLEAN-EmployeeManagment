@@ -127,6 +127,7 @@ Para arrancar la aplicación, sigue estos pasos:
 - **DTOs**: Separados de las entidades de dominio.
 - **Unit of Work (UoW)**: Implementado para gestionar transacciones atómicas a nivel de caso de uso, asegurando la consistencia de los datos.
 - **Manejo de Errores Enriquecido**: Los errores de infraestructura se traducen a errores de dominio "ricos" en la capa de infraestructura, y el controlador los maneja de forma centralizada y genérica.
+- **Ensamblaje de Dependencias**: La lógica de inyección de dependencias se ha centralizado en un paquete `app/` para una configuración más limpia y mantenible.
 
 ### SOLID
 - **S (Single Responsibility)**: Cada archivo/clase tiene una responsabilidad clara (ej: un caso de uso, un repositorio, un factory).
@@ -139,3 +140,10 @@ Para arrancar la aplicación, sigue estos pasos:
 - **Logging Estructurado**: Integración de `log/slog` para logs estructurados y con niveles.
 - **Configurable por Entorno**: El nivel y formato del log se configuran a través de variables de entorno (`LOG_LEVEL`, `LOG_FORMAT`).
 - **Salida Múltiple**: Capacidad de escribir logs simultáneamente en la consola (`stdout`) y en un archivo (`LOG_FILE_PATH`).
+
+### Testing
+- **Tests Unitarios**: Ubicados junto al código que prueban, dentro de sus respectivos paquetes.
+- **Tests End-to-End (E2E)**: Implementados en la carpeta `tests/e2e/` para verificar el flujo completo de la aplicación, utilizando `testcontainers-go` para entornos de base de datos aislados.
+
+### Migraciones
+- **Gestión Centralizada**: La creación de migraciones se gestiona a través de `Makefile`, requiriendo la especificación explícita del contexto (`employee` o `shared`) para asegurar la ubicación correcta de los archivos de migración.

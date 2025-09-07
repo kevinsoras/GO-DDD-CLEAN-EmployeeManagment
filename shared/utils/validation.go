@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
+	sharedDomain "github.com/kevinsoras/employee-management/shared/domain"
 )
 
 // RequiredIf es una validación personalizada para required_if
@@ -62,10 +63,10 @@ func ValidateAndBind(r *http.Request, dst interface{}) error {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(dst); err != nil {
-		return fmt.Errorf("invalid request body: %w", err)
+		return sharedDomain.NewInvalidInputError(fmt.Sprintf("Cuerpo de la solicitud inválido: %s", err.Error()), err)
 	}
 	if err := validate.Struct(dst); err != nil {
-		return fmt.Errorf("validation error: %w", err)
+		return sharedDomain.NewInvalidInputError(fmt.Sprintf("Error de validación: %s", err.Error()), err)
 	}
 	return nil
 }

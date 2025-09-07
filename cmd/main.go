@@ -8,10 +8,11 @@ import (
 
 	_ "github.com/kevinsoras/employee-management/docs" // Importa los docs generados por Swag
 	"github.com/joho/godotenv"
-	"github.com/kevinsoras/employee-management/contexts/employee/interfaces"
 	"github.com/kevinsoras/employee-management/shared/infrastructure/db"
 	"github.com/kevinsoras/employee-management/shared/infrastructure/logger"
 	httpSwagger "github.com/swaggo/http-swagger" // Importa el manejador de Swagger UI
+
+	"github.com/kevinsoras/employee-management/app" // Importa el nuevo paquete 'app'
 )
 
 // @title Employee Management API
@@ -36,11 +37,11 @@ func main() {
 	db.TestPostgresConnection(dsn)
 	dbConn := db.NewPostgresConnection(dsn)
 
-	// Inicializar controller con inyección de dependencias
-	employeeController := interfaces.NewEmployeeController(dbConn, appLogger)
+	// Ensamblar toda la aplicación
+	application := app.NewApplication(dbConn, appLogger)
 
 	// Inicializar API
-	http.HandleFunc("/employee", employeeController.HandleRegister)
+	http.HandleFunc("/employee", application.EmployeeController.HandleRegister)
 
 	// Ruta para la documentación de Swagger
 	http.Handle("/swagger/", httpSwagger.Handler(httpSwagger.URL("http://localhost:3000/swagger/doc.json")))

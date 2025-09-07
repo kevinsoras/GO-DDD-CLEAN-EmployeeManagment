@@ -13,10 +13,15 @@ endif
 
 migrate-new:
 	@if [ -z "$(name)" ]; then \
-		echo "❌ Error: necesitas pasar el nombre (make migrate-new name=create_employees)"; \
-	else \
-		migrate create -ext sql -dir $(MIGRATIONS_DIR) $(name); \
-	fi
+		echo "❌ Error: necesitas pasar el nombre (ej: make migrate-new name=create_employees)"; \
+		exit 1; \
+	fi; \
+	@if [ -z "$(CONTEXT)" ] || ([ "$(CONTEXT)" != "employee" ] && [ "$(CONTEXT)" != "shared" ]); then \
+		echo "❌ Error: necesitas especificar un CONTEXT válido (employee o shared) (ej: make migrate-new name=add_field CONTEXT=employee)"; \
+		exit 1; \
+	fi; \
+	@echo "Creating migration '$(name)' for context '$(CONTEXT)' in $(MIGRATIONS_DIR)"; \
+	migrate create -ext sql -dir $(MIGRATIONS_DIR) $(name);
 
 
 MIGRATIONS_DIRS = shared/infrastructure/persistence/migrations \

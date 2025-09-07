@@ -499,7 +499,7 @@ func TestRegisterEmployeeUseCase_Execute_SavePersonUniqueConstraintError(t *test
 	mockLaborService.On("ValidateEmployeeRegistration", mock.Anything, mock.Anything).Return(nil)
 	benefits, _ := employee_value_objects.NewBenefits(0.0, 0.0, 0)
 	mockLaborService.On("CalculateBenefits", mock.Anything).Return(benefits, nil)
-	mockPersonRepo.On("SavePerson", mock.Anything, mock.Anything).Return(sharedInfra.ErrUniqueConstraint)
+	mockPersonRepo.On("SavePerson", mock.Anything, mock.Anything).Return(sharedDomain.NewAlreadyExistsError("La persona o el documento ya se encuentra registrado.", sharedInfra.ErrUniqueConstraint))
 
 	cmd := usecases.RegisterEmployeeCommand{Data: req}
 
@@ -508,7 +508,7 @@ func TestRegisterEmployeeUseCase_Execute_SavePersonUniqueConstraintError(t *test
 
 	// Then
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "person with this ID/document already exists")
+	assert.Contains(t, err.Error(), "La persona o el documento ya se encuentra registrado.")
 	var domainErr *sharedDomain.DomainError
 	assert.True(t, errors.As(err, &domainErr))
 	assert.Equal(t, "ALREADY_EXISTS", domainErr.Code)
