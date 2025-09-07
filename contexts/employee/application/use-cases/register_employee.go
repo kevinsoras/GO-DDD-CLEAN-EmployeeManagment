@@ -60,22 +60,14 @@ func (uc *RegisterEmployeeUseCase) Execute(ctx context.Context, req employeedto.
 	personID := personAgg.Person.ID
 	// 2. Crear entidad Employee usando el ID de persona
 	e := req.EmploymentData
-	employee := entities.NewEmployee(
-		personID,
-		e.Salary,
-		e.ContractType,
-		e.Position,
-		e.WorkSchedule,
-		e.Department,
-		e.WorkLocation,
-		e.BankAccount,
-		e.AFP,
-		e.EPS,
-		e.StartDate,
-		e.HasCTS,
-		e.HasGratification,
-		e.HasVacation,
-	)
+	employee, err := entities.NewEmployeeBuilder(personID, e.Salary, e.ContractType, e.StartDate).
+		WithJobDetails(e.Position, e.Department, e.WorkSchedule, e.WorkLocation).
+		WithPayroll(e.BankAccount, e.AFP, e.EPS).
+		WithBenefitFlags(e.HasCTS, e.HasGratification, e.HasVacation).
+		Build()
+	if err != nil {
+		return employeedto.EmployeeResponse{}, nil, fmt.Errorf("error creando empleado: %w", err)
+	}
 
 	// 2. Validaciones de dominio (servicio de dominio)
 	employmentData := services.EmploymentData{
