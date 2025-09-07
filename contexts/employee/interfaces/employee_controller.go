@@ -44,15 +44,15 @@ func (c *EmployeeController) HandleRegister(w http.ResponseWriter, r *http.Reque
 		w.Write([]byte("Method not allowed"))
 		return
 	}
-
-	var req dto.EmployeeRegistrationRequest
-	if err := utils.ValidateAndBind(r, &req); err != nil {
+	//Validate Dto
+	var dto dto.EmployeeRegistrationRequest
+	if err := utils.ValidateAndBind(r, &dto); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	resp, _, err := c.registerEmployeeUseCase.Execute(r.Context(), req)
+	resp, _, err := c.registerEmployeeUseCase.Execute(r.Context(), dto)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(utils.ErrorResponse(err.Error()))
