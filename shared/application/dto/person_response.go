@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/kevinsoras/employee-management/shared/domain/aggregates"
+	"github.com/kevinsoras/employee-management/shared/domain/value_objects"
 )
 
 type PersonResponse struct {
@@ -43,9 +44,9 @@ func NewPersonResponse(agg *aggregates.PersonAggregate) PersonResponse {
 	}
 	// Usar un factory para poblar los campos según el tipo
 	switch agg.Person.Type {
-	case "NATURAL":
+	case value_objects.Natural:
 		fillNaturalPersonFields(&pr, agg)
-	case "JURIDICAL":
+	case value_objects.Juridical:
 		fillJuridicalPersonFields(&pr, agg)
 	}
 	return pr
